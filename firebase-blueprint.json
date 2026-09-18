@@ -1,0 +1,53 @@
+{
+  "entities": {
+    "Reservation": {
+      "title": "Reservation",
+      "description": "Customer home repair and interior visit reservation",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique reservation ID" },
+        "serviceType": { "type": "string", "description": "Type of service requested" },
+        "serviceCategory": { "type": "string", "description": "Category of repair" },
+        "date": { "type": "string", "description": "Requested date (YYYY-MM-DD)" },
+        "timeSlot": { "type": "string", "description": "Requested time slot" },
+        "customerName": { "type": "string", "description": "Customer full name" },
+        "phone": { "type": "string", "description": "Customer phone number" },
+        "address": { "type": "string", "description": "Visit address" },
+        "addressDetail": { "type": "string", "description": "Detailed address apartment/room number" },
+        "notes": { "type": "string", "description": "Detailed repair issues and descriptions" },
+        "photoUrl": { "type": "string", "description": "URL or base64 data of damage/site photos" },
+        "status": {
+          "type": "string",
+          "enum": ["PENDING", "CONFIRMED", "COMPLETED", "CANCELLED"],
+          "description": "Current status of the visit booking"
+        },
+        "assignedEngineer": { "type": "string", "description": "Assigned technician name" },
+        "userId": { "type": "string", "description": "User UID if signed in or 'guest'" },
+        "userEmail": { "type": "string", "description": "Customer email if signed in" },
+        "createdAt": { "type": "string", "description": "Creation timestamp ISO string" },
+        "updatedAt": { "type": "string", "description": "Last update timestamp ISO string" }
+      },
+      "required": ["serviceType", "date", "timeSlot", "customerName", "phone", "address", "status", "createdAt"]
+    },
+    "Admin": {
+      "title": "Admin",
+      "description": "Administrator profile",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "description": "Admin email" },
+        "role": { "type": "string", "enum": ["ADMIN", "MANAGER"] }
+      },
+      "required": ["email", "role"]
+    }
+  },
+  "firestore": {
+    "/reservations/{reservationId}": {
+      "schema": "Reservation",
+      "description": "Stores home repair bookings submitted by customers"
+    },
+    "/admins/{adminId}": {
+      "schema": "Admin",
+      "description": "Stores administrator registry"
+    }
+  }
+}

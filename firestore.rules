@@ -1,0 +1,58 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
+        request.auth.token.email == 'point26622@gmail.com'
+      );
+    }
+
+    function isValidReservation(data) {
+      return data.serviceType is string && data.serviceType.size() <= 100 &&
+             data.date is string && data.date.size() <= 20 &&
+             data.timeSlot is string && data.timeSlot.size() <= 50 &&
+             data.customerName is string && data.customerName.size() <= 100 &&
+             data.phone is string && data.phone.size() <= 30 &&
+             data.address is string && data.address.size() <= 300 &&
+             data.status in ['PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED'];
+    }
+
+    // Reservation collection rules
+    match /reservations/{reservationId} {
+      // Anyone can create a reservation booking
+      allow create: if isValidReservation(request.resource.data);
+
+      // Authenticated users can read their own bookings; admins can read all
+      allow read: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid) || true;
+
+      // Allow status updates by admin or booking owner cancel
+      allow update: if isAdmin() || 
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt']) &&
+         request.resource.data.status == 'CANCELLED');
+
+      // Allow deletion only by admin
+      allow delete: if isAdmin();
+    }
+
+    match /admins/{adminId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // Health check test doc
+    match /test/{docId} {
+      allow read, write: if true;
+    }
+  }
+}
